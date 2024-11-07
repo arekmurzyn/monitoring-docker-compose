@@ -1,0 +1,25 @@
+version: '3'
+
+include:
+  - ./cadvisor/cadvisor.yml
+  - ./grafana/grafana.yml
+  - ./loki/loki.yml
+  - ./prometheus/prom.yml
+
+services:
+  memsipiju:
+    image: arbajt/memsipiju:0.0.1
+    container_name: memsipiju
+    hostname: memsipiju01
+    ports:
+      - 5000:5000
+    logging:
+      driver: loki
+      options:
+        loki-url: "http://localhost:3100/loki/api/v1/push"
+        loki-external-labels: "job=docker,container=memsipiju"
+        loki-relabel-config: |
+          - action: labeldrop
+            regex: filename|compose_project|compose_service|service_name|host	
+    depends_on:
+      - loki

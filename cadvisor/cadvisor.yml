@@ -1,0 +1,39 @@
+services:
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    hostname: cadvisor01
+    ports:
+      - 8080:8080
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/snap/docker/common/var-lib-docker:/var/lib/docker:ro
+    logging:
+      driver: loki
+      options:
+        loki-url: "http://localhost:3100/loki/api/v1/push"
+        loki-external-labels: "job=docker,container=cadvisor"
+        loki-relabel-config: |
+          - action: labeldrop
+            regex: filename|compose_project|compose_service|service_name|host	
+    depends_on:
+      - redis
+      - loki
+  redis:
+    image: redis:latest
+    container_name: redis
+    hostname: redis01
+    ports:
+      - 6379:6379
+    logging:
+      driver: loki
+      options:
+        loki-url: "http://localhost:3100/loki/api/v1/push"
+        loki-external-labels: "job=docker,container=redis"
+        loki-relabel-config: |
+          - action: labeldrop
+            regex: filename|compose_project|compose_service|service_name|host	
+    depends_on:
+      - loki

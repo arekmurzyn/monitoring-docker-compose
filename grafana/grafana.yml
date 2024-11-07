@@ -1,0 +1,21 @@
+services:
+  grafana:
+    image: grafana/grafana-enterprise:latest
+    ports:
+      - "3000:3000"
+    restart: always
+    hostname: grafana01
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    logging:
+      driver: loki
+      options:
+        loki-url: "http://localhost:3100/loki/api/v1/push"
+        loki-external-labels: "job=docker,container=grafana"
+        loki-relabel-config: |
+          - action: labeldrop
+            regex: filename|compose_project|compose_service|service_name|host	
+    depends_on:
+      - loki 
+volumes:
+  grafana-storage: {}
